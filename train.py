@@ -79,8 +79,8 @@ parser.add_argument('--multiprocessing-distributed', action='store_true',
                          'fastest way to use PyTorch for either single node or '
                          'multi node data parallel training')
 ####
-parser.add_argument('--hog_ppc', default=(3, 3), type=tuple, help='pixel_per_cell in hog')
-parser.add_argument('--hog_cpb', default=(1, 1), type=tuple, help='cells_per_block in hog')
+parser.add_argument('--hog_ppc', default=3, type=int, help='pixel_per_cell in hog')
+parser.add_argument('--hog_cpb', default=1, type=int, help='cells_per_block in hog')
 parser.add_argument('--stacked_dims', action='store_true', help='stack cells dimension on histgrams')
 
 best_acc1 = 0
@@ -227,7 +227,7 @@ def main_worker(gpu, ngpus_per_node, args):
         transforms.Compose([
             transforms.RandomResizedCrop(224),
             transforms.RandomHorizontalFlip(),
-            hog.HOGTransform(args.hog_ppc, args.hog_cpb, args.stacked_dims)
+            hog.HOGTransform((args.hog_ppc, args.hog_ppc), (args.hog_cpb, args.hog_cpb), args.stacked_dims, args.gpu)
             # transforms.ToTensor(),
             # normalize,
         ]))
@@ -247,7 +247,7 @@ def main_worker(gpu, ngpus_per_node, args):
             transforms.CenterCrop(224),
             # transforms.ToTensor(),
             # normalize,
-            hog.HOGTransform(args.hog_ppc, args.hog_cpb, args.stacked_dims)
+            hog.HOGTransform((args.hog_ppc, args.hog_ppc), (args.hog_cpb, args.hog_cpb), args.stacked_dims)
         ])),
         batch_size=args.batch_size, shuffle=False,
         num_workers=args.workers, pin_memory=True)
@@ -325,7 +325,7 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
         batch_time.update(time.time() - end)
         end = time.time()
 
-        if i % args.print_freq == 0:
+        if i % args.print_freq == 0 and args.gpu == 0:
             progress.display(i)
 
 

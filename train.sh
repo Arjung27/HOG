@@ -28,9 +28,9 @@ PYTHON=python
 
 now=$(date +"%Y%m%d_%H%M%S")
 
-$PYTHON -u ${exp_dir}/train.py /fs/cml-datasets/ImageNet/ILSVRC2012 \
-  --arch vgg11_H1 -j 16 --lr 0.01 \
+$PYTHON -u ./train.py /fs/cml-datasets/ImageNet/ILSVRC2012 \
+  --arch vgg11_H1 -j 16 -b 256 --lr 0.01 \
   --world-size 1 --rank 0 --dist-url tcp://localhost:17456 --multiprocessing-distributed \
-  --hog_ppc (3, 3) --hog_cpb (1, 1) --stacked_dims \
-  2>&1 | tee ${model_dir}/train-$now.log
+  --hog_ppc 3 --hog_cpb 1 --stacked_dims \
+  2>&1 | tee ./train-$now.log
 
