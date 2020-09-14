@@ -227,8 +227,8 @@ def main_worker(gpu, ngpus_per_node, args):
         transforms.Compose([
             transforms.RandomResizedCrop(224),
             transforms.RandomHorizontalFlip(),
-            hog.HOGTransform((args.hog_ppc, args.hog_ppc), (args.hog_cpb, args.hog_cpb), args.stacked_dims, args.gpu)
-            # transforms.ToTensor(),
+            # hog.HOGTransform((args.hog_ppc, args.hog_ppc), (args.hog_cpb, args.hog_cpb), args.stacked_dims, args.gpu)
+            transforms.ToTensor()
             # normalize,
         ]))
 
@@ -245,9 +245,9 @@ def main_worker(gpu, ngpus_per_node, args):
         datasets.ImageFolder(valdir, transforms.Compose([
             transforms.Resize(256),
             transforms.CenterCrop(224),
-            # transforms.ToTensor(),
+            transforms.ToTensor()
             # normalize,
-            hog.HOGTransform((args.hog_ppc, args.hog_ppc), (args.hog_cpb, args.hog_cpb), args.stacked_dims)
+            # hog.HOGTransform((args.hog_ppc, args.hog_ppc), (args.hog_cpb, args.hog_cpb), args.stacked_dims)
         ])),
         batch_size=args.batch_size, shuffle=False,
         num_workers=args.workers, pin_memory=True)

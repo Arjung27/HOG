@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 # from .utils import load_state_dict_from_url
 
+from hog_layer import HOGLayerMoreComplicated
+
 __all__ = [
     'VGG', 'vgg11', 'vgg11_bn', 'vgg13', 'vgg13_bn', 'vgg16', 'vgg16_bn',
     'vgg19_bn', 'vgg19',
@@ -24,6 +26,7 @@ class VGG(nn.Module):
 
     def __init__(self, features, num_classes=1000, pool_size=7, init_weights=True):
         super(VGG, self).__init__()
+        self.hog = HOGLayerMoreComplicated(nbins=9, pool=3, mean_in=True)
         self.features = features
         self.avgpool = nn.AdaptiveAvgPool2d((pool_size, pool_size))
         self.classifier = nn.Sequential(
@@ -39,6 +42,7 @@ class VGG(nn.Module):
             self._initialize_weights()
 
     def forward(self, x):
+        x = self.hog(x)
         x = self.features(x)
         x = self.avgpool(x)
         x = torch.flatten(x, 1)
