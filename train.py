@@ -35,6 +35,7 @@ parser.add_argument('data', metavar='DIR',
 #                         ' | '.join(model_names) +
 #                         ' (default: resnet18)')
 parser.add_argument('-a', '--arch', type=str, default='vgg11_H1')
+parser.add_argument('--output_dir', type=str, default='exp_default')
 parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
 parser.add_argument('--epochs', default=90, type=int, metavar='N',
@@ -79,15 +80,23 @@ parser.add_argument('--multiprocessing-distributed', action='store_true',
                          'fastest way to use PyTorch for either single node or '
                          'multi node data parallel training')
 ####
-parser.add_argument('--hog_ppc', default=3, type=int, help='pixel_per_cell in hog')
-parser.add_argument('--hog_cpb', default=1, type=int, help='cells_per_block in hog')
-parser.add_argument('--stacked_dims', action='store_true', help='stack cells dimension on histgrams')
+# parser.add_argument('--hog_ppc', default=3, type=int, help='pixel_per_cell in hog')
+# parser.add_argument('--hog_cpb', default=1, type=int, help='cells_per_block in hog')
+# parser.add_argument('--stacked_dims', action='store_true', help='stack cells dimension on histgrams')
 
 best_acc1 = 0
 
 
 def main():
     args = parser.parse_args()
+
+    for arg in vars(args):
+        print('{}: {}'.format(arg, getattr(args, arg)))
+
+    output_dir = 'exp_{}_{}'.format(args.arch, args.lr)
+    if not os.path.isdir(output_dir):
+        os.makedirs(output_dir)
+    args.output_dir = output_dir
 
     if args.seed is not None:
         random.seed(args.seed)
@@ -273,13 +282,16 @@ def main_worker(gpu, ngpus_per_node, args):
 
         if not args.multiprocessing_distributed or (args.multiprocessing_distributed
                 and args.rank % ngpus_per_node == 0):
+            filename = os.path.join(args.output_dir, 'checkpoint.pth.tar')
             save_checkpoint({
                 'epoch': epoch + 1,
                 'arch': args.arch,
                 'state_dict': model.state_dict(),
                 'best_acc1': best_acc1,
                 'optimizer' : optimizer.state_dict(),
-            }, is_best)
+            }, is_best, filename=filename)
+            if epoch % 10 == 0:
+                shutil.copyfile(filename, os.path.join(args.output_dir, 'checkpoint_{}.pth.tar'.format(epoch)))
 
 
 def train(train_loader, model, criterion, optimizer, epoch, args):
@@ -364,12 +376,14 @@ def validate(val_loader, model, criterion, args):
             batch_time.update(time.time() - end)
             end = time.time()
 
-            if i % args.print_freq == 0:
+            if i % args.print_freq == 0 and args.gpu == 0:
                 progress.display(i)
 
         # TODO: this should also be done with the ProgressMeter
-        print(' * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}'
-              .format(top1=top1, top5=top5))
+        if not args.multiprocessing_distributed or (args.multiprocessing_distributed
+                and args.gpu == 0):
+            print(' * Acc@1 {top1.avg:.3f} Acc@5 {top5.avg:.3f}'
+                .format(top1=top1, top5=top5))
 
     return top1.avg
 

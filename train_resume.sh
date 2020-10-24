@@ -29,9 +29,10 @@ PYTHON=python
 now=$(date +"%Y%m%d_%H%M%S")
 
 lr=$1
+resume=$2
 
 $PYTHON -u ./train.py /fs/cml-datasets/ImageNet/ILSVRC2012 \
-  --arch vgg11_H1 -j 16 -b 256 --lr ${lr} \
+  --arch vgg11_H1 -j 16 -b 256 --lr ${lr} --resume ${resume} \
   --world-size 1 --rank 0 --dist-url tcp://localhost:17456 --multiprocessing-distributed \
   2>&1 | tee ./train-$now.log
 

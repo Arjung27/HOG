@@ -87,6 +87,7 @@ class HOGLayerMoreComplicated(nn.Module):
                        self.padding, self.dilation, 1)
         # 2. Mag/ Phase
         mag = gxy.norm(dim=1)
+        mag /= mag.max()
         norm = mag[:, None, :, :]
         phase = torch.atan2(gxy[:, 0, :, :], gxy[:, 1, :, :])
 
@@ -132,30 +133,21 @@ class HOGLayerMoreComplicated(nn.Module):
         return out
 
 if __name__ == '__main__':
-    import cv2
-    cuda = True
+    from PIL import Image
+    import numpy as np
+    cuda = False
 
-    path = '/cmlscratch/manlis/data/IMAGENET-C/noise/shot_noise/1/n13054560/ILSVRC2012_val_00048790.JPEG'
-    im = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+    path = r'C:\\Users\\azshue\\OneDrive\\2020-Spring\\Neurips2020\demo\\ILSVRC2012_val_00003548_stylized.png'
+    img = Image.open(path)
+    im = torch.from_numpy(np.array(img)).float()
+    im = torch.transpose(im, 0, 2).unsqueeze_(0)
+    im -= im.min()
+    im /= im.max()
 
-    x = torch.from_numpy(im)[None, None]
     if cuda:
-        x = x.cuda().float()
-    else:
-        x = x.float()
-
-    hog = HOGLayer(nbins=12, pool=2)
+        x = x.cuda()
+    hog = HOGLayerMoreComplicated(nbins=9, pool=3, mean_in=True)
     if cuda:
         hog = hog.cuda()
 
-    y = hog(x)
-
-    y2 = y.cpu().numpy()
-    bin = 0
-    while 1:
-        im = y2[0, bin]
-        im = (im-im.min())/(im.max()-im.min())
-        print('bin: ', bin, ' ang: ', float(bin)/hog.nbins * 180.0)
-        cv2.imshow('bin', im)
-        cv2.waitKey()
-        bin = (bin + 1) % hog.nbins
+    y = hog(im)

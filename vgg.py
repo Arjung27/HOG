@@ -43,6 +43,8 @@ class VGG(nn.Module):
 
     def forward(self, x):
         x = self.hog(x)
+        # print('hog output max value: ', x.max())
+        # print('hog output min value: ', x.min())
         x = self.features(x)
         x = self.avgpool(x)
         x = torch.flatten(x, 1)
