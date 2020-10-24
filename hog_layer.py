@@ -137,7 +137,7 @@ if __name__ == '__main__':
     import numpy as np
     cuda = False
 
-    path = r'C:\\Users\\azshue\\OneDrive\\2020-Spring\\Neurips2020\demo\\ILSVRC2012_val_00003548_stylized.png'
+    path = './test.png'
     img = Image.open(path)
     im = torch.from_numpy(np.array(img)).float()
     im = torch.transpose(im, 0, 2).unsqueeze_(0)
